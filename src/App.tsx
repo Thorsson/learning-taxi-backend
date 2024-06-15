@@ -1,11 +1,17 @@
-// src/App.jsx
+import Sidebar from './components/Sidebar';
 import './styles.scss';
 
-const App = () => {
+function App() {
   return (
-    <div className="app">
-      <h1>Hello, world!</h1>
-    </div>
+    <>
+      <Sidebar />
+
+      {/* scss working test example */}
+      <div className="app">
+        <h1>Hello, world!</h1>
+      </div>
+    </>
+    
   );
 };
 
