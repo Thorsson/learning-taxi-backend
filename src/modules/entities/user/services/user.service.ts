@@ -15,8 +15,10 @@ export class UserService {
   ) {}
 
   async create(createUserDto: CreateUserDto) {
-    await this.checkEmailExist(createUserDto.email);
-    await this.checkPhoneExist(createUserDto.phone_number);
+    await Promise.all([
+      this.checkDataExist('email', createUserDto.email),
+      this.checkDataExist('phone_number', createUserDto.phone_number),
+    ]);
 
     const { password_hash, password_salt } = await this.hashPassword(
       createUserDto.password,
@@ -60,19 +62,19 @@ export class UserService {
     });
   }
 
-  async update(id: number, updateUserDto: UpdateUserDto) {
-    await this.checkIDExist(id);
-    if (updateUserDto.email)
-      await this.checkEmailExist(updateUserDto.email, id);
-    if (updateUserDto.phone_number)
-      await this.checkPhoneExist(updateUserDto.phone_number, id);
+  async update(id: number, updateUser: UpdateUserDto) {
+    await this.checkDataExist('id', id.toString(), id);
+    if (updateUser.email)
+      await this.checkDataExist('email', updateUser.email, id);
+    if (updateUser.phone_number)
+      await this.checkDataExist('phone_number', updateUser.phone_number, id);
 
-    await this.userRepository.update(id, updateUserDto);
+    await this.userRepository.update(id, updateUser);
     return await this.userRepository.findOne({ where: { id } });
   }
 
   async remove(id: number) {
-    await this.checkIDExist(id);
+    await this.checkDataExist('id', id.toString());
     return await this.userRepository.delete(id);
   }
 
@@ -96,30 +98,23 @@ export class UserService {
     return { password_hash, password_salt };
   }
 
-  async checkIDExist(id: number) {
-    const checkID = await this.userRepository.findOne({ where: { id } });
-    if (!checkID)
+  async checkDataExist(
+    data: 'id' | 'phone_number' | 'email',
+    value: string,
+    checkId = 0,
+  ) {
+    const checkData = await this.userRepository.findOne({
+      where: { [data]: value },
+    });
+
+    if (!checkData && data === 'id')
       throw new HttpException('User not found', HttpStatus.NOT_FOUND);
-  }
 
-  async checkEmailExist(email: string, id?: number) {
-    const checkEmail = await this.userRepository.findOne({
-      where: { email },
-    });
-
-    if (id && checkEmail.id === id) return;
-    if (checkEmail)
-      throw new HttpException('Email already used.', HttpStatus.BAD_REQUEST);
-  }
-
-  async checkPhoneExist(phone: string, id?: number) {
-    const checkPhone = await this.userRepository.findOne({
-      where: { phone_number: phone },
-    });
-
-    if (id && checkPhone.id === id) return;
-    if (checkPhone)
-      throw new HttpException('Phone already used.', HttpStatus.BAD_REQUEST);
+    if (checkData && checkData.id !== (data === 'id' ? Number(value) : checkId))
+      throw new HttpException(
+        `${data.charAt(0).toUpperCase() + data.slice(1).replace('_', ' ')} already used.`,
+        HttpStatus.BAD_REQUEST,
+      );
   }
 
   async validateUser(email: string, phone?: string) {
