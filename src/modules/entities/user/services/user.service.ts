@@ -41,7 +41,14 @@ export class UserService {
     return await this.userRepository.findOne({ where: { email } });
   }
 
-  async findOneByPhone(phone: string) {
+  async findOneByPhone(phone: string, withPassword = false) {
+    if (withPassword)
+      return await this.userRepository
+        .createQueryBuilder()
+        .addSelect('password_hash')
+        .where('phone_number = :phone', { phone })
+        .getOne();
+
     return await this.userRepository.findOne({
       where: { phone_number: phone },
     });
@@ -94,6 +101,7 @@ export class UserService {
     if (!checkID)
       throw new HttpException('User not found', HttpStatus.NOT_FOUND);
   }
+
   async checkEmailExist(email: string, id?: number) {
     const checkEmail = await this.userRepository.findOne({
       where: { email },
@@ -112,5 +120,14 @@ export class UserService {
     if (id && checkPhone.id === id) return;
     if (checkPhone)
       throw new HttpException('Phone already used.', HttpStatus.BAD_REQUEST);
+  }
+
+  async validateUser(email: string, phone?: string) {
+    return await this.userRepository
+      .createQueryBuilder('user')
+      .where('email = :email', { email })
+      .orWhere('phone_number = :phone', { phone })
+      .addSelect('user.password_hash')
+      .getOne();
   }
 }
