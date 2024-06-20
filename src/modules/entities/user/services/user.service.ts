@@ -24,18 +24,23 @@ export class UserService {
       createUserDto.password,
     );
 
-    return await this.userRepository.save({
+    const user = await this.userRepository.save({
       password_hash,
       password_salt,
       ...createUserDto,
     });
+
+    delete user.password_hash;
+    delete user.password_salt;
+
+    return user;
   }
 
   async findAll() {
     return await this.userRepository.find({});
   }
 
-  async findOne(id: number) {
+  async findOneById(id: number) {
     return await this.userRepository.findOne({ where: { id } });
   }
 
@@ -43,14 +48,7 @@ export class UserService {
     return await this.userRepository.findOne({ where: { email } });
   }
 
-  async findOneByPhone(phone: string, withPassword = false) {
-    if (withPassword)
-      return await this.userRepository
-        .createQueryBuilder()
-        .addSelect('password_hash')
-        .where('phone_number = :phone', { phone })
-        .getOne();
-
+  async findOneByPhone(phone: string) {
     return await this.userRepository.findOne({
       where: { phone_number: phone },
     });

@@ -9,14 +9,17 @@ import {
   ParseIntPipe,
   Post,
   Put,
+  Request,
+  UseGuards,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
 import { UserService } from '../services/user.service';
 import { CreateUserDto } from '../dto/user.create.dto';
-import { ApiResponse, ApiTags, OmitType } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiResponse, ApiTags, OmitType } from '@nestjs/swagger';
 import { UpdateUserDto } from '../dto/user.update.dto';
 import { User } from '../entity/user.entity';
+import { JwtAuthGuard } from '../../../security/auth/guards/jwt.guard';
 
 @ApiTags('User')
 @Controller('users')
@@ -40,7 +43,7 @@ export class UserController {
   @Get(':id')
   @HttpCode(HttpStatus.OK)
   async findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.userService.findOne(id);
+    return this.userService.findOneById(id);
   }
 
   @ApiResponse({
@@ -79,23 +82,24 @@ export class UserController {
     return this.userService.findOneByUsername(username);
   }
 
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
   @UsePipes(
     new ValidationPipe({
       transform: true,
     }),
   )
-  @Put(':id')
+  @Put()
   @HttpCode(HttpStatus.ACCEPTED)
-  async update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() updateUserDto: UpdateUserDto,
-  ) {
-    return await this.userService.update(id, updateUserDto);
+  async update(@Body() updateUserDto: UpdateUserDto, @Request() req) {
+    return await this.userService.update(req.user.id, updateUserDto);
   }
 
-  @Delete(':id')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Delete()
   @HttpCode(HttpStatus.NO_CONTENT)
-  async remove(@Param('id', ParseIntPipe) id: number) {
-    return await this.userService.remove(id);
+  async remove(@Request() req) {
+    return await this.userService.remove(req.user.id);
   }
 }

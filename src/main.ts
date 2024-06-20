@@ -10,7 +10,7 @@ async function bootstrap() {
     .setTitle('Taxi - Backend')
     .setDescription('Uber clone API.')
     .setVersion('0.000000001')
-    .addTag('Uber')
+    .addBearerAuth()
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
