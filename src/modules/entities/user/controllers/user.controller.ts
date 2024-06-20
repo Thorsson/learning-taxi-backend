@@ -20,6 +20,7 @@ import { ApiBearerAuth, ApiResponse, ApiTags, OmitType } from '@nestjs/swagger';
 import { UpdateUserDto } from '../dto/user.update.dto';
 import { User } from '../entity/user.entity';
 import { JwtAuthGuard } from '../../../security/auth/guards/jwt.guard';
+import { UserResetPasswordDto } from '../dto/user.reset-password.dto';
 
 @ApiTags('User')
 @Controller('users')
@@ -101,5 +102,20 @@ export class UserController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Request() req) {
     return await this.userService.remove(req.user.id);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Put('reset-password')
+  @HttpCode(HttpStatus.ACCEPTED)
+  async updatePassword(
+    @Body() { currentPassword, newPassword }: UserResetPasswordDto,
+    @Request() req,
+  ) {
+    return await this.userService.updatePassword(
+      req.user.id,
+      currentPassword,
+      newPassword,
+    );
   }
 }

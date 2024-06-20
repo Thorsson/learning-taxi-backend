@@ -76,8 +76,14 @@ export class UserService {
     return await this.userRepository.delete(id);
   }
 
-  async updatePassword(id: number, password: string) {
-    const { password_hash, password_salt } = await this.hashPassword(password);
+  async updatePassword(
+    id: number,
+    currentPassword: string,
+    newPassword: string,
+  ) {
+    await this.confirmPassword(id, currentPassword);
+    const { password_hash, password_salt } =
+      await this.hashPassword(newPassword);
 
     await this.userRepository.update(id, {
       password_hash,
@@ -86,8 +92,26 @@ export class UserService {
 
     return {
       message: 'Password updated',
-      success: true,
     };
+  }
+
+  async confirmPassword(id: number, password: string) {
+    const user = await this.userRepository
+      .createQueryBuilder('user')
+      .where('id = :id', { id })
+      .addSelect('user.password_hash')
+      .getOne();
+
+    const isValidPassword = await this.bcrypt.compare(
+      password,
+      user.password_hash,
+    );
+
+    if (!isValidPassword)
+      throw new HttpException(
+        'Current password is wrong',
+        HttpStatus.BAD_REQUEST,
+      );
   }
 
   async hashPassword(password: string) {
