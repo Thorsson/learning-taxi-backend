@@ -1,18 +1,20 @@
 import { Injectable } from '@nestjs/common';
 import { TypeOrmModuleOptions, TypeOrmOptionsFactory } from '@nestjs/typeorm';
+import { Car } from '../../car/entities/car.entity';
+import { Driver } from '../../driver/entities/driver.entity';
 
 @Injectable()
-export class DevConfigService implements TypeOrmOptionsFactory {
+export class DevService implements TypeOrmOptionsFactory {
   createTypeOrmOptions(): TypeOrmModuleOptions {
     return {
       type: 'mysql',
-      host: process.env.MYSQLHOST,
-      port: parseInt(process.env.MYSQLPORT),
-      username: process.env.MYSQLUSER,
-      password: process.env.MYSQLPASSWORD,
-      database: process.env.MYSQLDATABASE,
+      host: 'localhost',
+      port: 3306,
+      username: 'root',
+      password: '',
+      database: 'db_uber_clone',
+      entities: [Driver, Car],
       synchronize: true,
-      autoLoadEntities: true,
     };
   }
 }

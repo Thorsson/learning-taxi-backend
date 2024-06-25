@@ -1,15 +1,16 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { DevConfigService } from './datasource/config/dev.service';
+
+import { AppController } from './app.controller';
+import { DevService } from './datasource/config/dev.service';
 
 @Module({
   imports: [
     ConfigModule.forRoot(),
     TypeOrmModule.forRootAsync({
-      useClass: DevConfigService,
+      useClass: DevService,
       imports: [ConfigModule],
     }),
   ],
