@@ -20,7 +20,7 @@ export class UserService {
       this.checkDataExist('phone_number', createUserDto.phone_number),
     ]);
 
-    const { password_hash, password_salt } = await this.hashPassword(
+    const { password_hash, password_salt } = await this.bcrypt.hashPassword(
       createUserDto.password,
     );
 
@@ -83,7 +83,7 @@ export class UserService {
   ) {
     await this.confirmPassword(id, currentPassword);
     const { password_hash, password_salt } =
-      await this.hashPassword(newPassword);
+      await this.bcrypt.hashPassword(newPassword);
 
     await this.userRepository.update(id, {
       password_hash,
@@ -112,12 +112,6 @@ export class UserService {
         'Current password is wrong',
         HttpStatus.BAD_REQUEST,
       );
-  }
-
-  async hashPassword(password: string) {
-    const password_salt = await this.bcrypt.getSalt();
-    const password_hash = await this.bcrypt.hash(password, password_salt);
-    return { password_hash, password_salt };
   }
 
   async checkDataExist(
