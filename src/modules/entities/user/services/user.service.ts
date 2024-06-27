@@ -96,11 +96,7 @@ export class UserService {
   }
 
   async confirmPassword(id: number, password: string) {
-    const user = await this.userRepository
-      .createQueryBuilder('user')
-      .where('id = :id', { id })
-      .addSelect('user.password_hash')
-      .getOne();
+    const user = await this.validateUser(id);
 
     const isValidPassword = await this.bcrypt.compare(
       password,
@@ -133,11 +129,11 @@ export class UserService {
       );
   }
 
-  async validateUser(email: string, phone?: string) {
+  async validateUser(identifier: any) {
     return await this.userRepository
       .createQueryBuilder('user')
-      .where('email = :email', { email })
-      .orWhere('phone_number = :phone', { phone })
+      .where('email = :email', { email: identifier })
+      .orWhere('id = :id', { id: identifier })
       .addSelect('user.password_hash')
       .getOne();
   }
