@@ -16,73 +16,75 @@ import {
 } from '@nestjs/common';
 import { UserService } from '../services/user.service';
 import { CreateUserDto } from '../dto/user.create.dto';
-import { ApiBearerAuth, ApiResponse, ApiTags, OmitType } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { UpdateUserDto } from '../dto/user.update.dto';
-import { User } from '../entity/user.entity';
 import { JwtAuthGuard } from '../../../security/auth/guards/jwt.guard';
 import { UserResetPasswordDto } from '../dto/user.reset-password.dto';
+import { UserGetInfoDto } from '../dto/user.get-info.dto';
 
 @ApiTags('User')
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
+  @ApiResponse({
+    status: 201,
+    description: 'The record has been successfully created.',
+  })
   @UsePipes(
     new ValidationPipe({
       transform: true,
     }),
   )
   @Post()
-  @HttpCode(HttpStatus.CREATED)
   async create(@Body() createUserDto: CreateUserDto) {
     return this.userService.create(createUserDto);
   }
 
   @ApiResponse({
-    type: OmitType(User, ['password_hash', 'password_salt']),
+    type: UserGetInfoDto,
   })
   @Get(':id')
-  @HttpCode(HttpStatus.OK)
   async findOne(@Param('id', ParseIntPipe) id: number) {
     return this.userService.findOneById(id);
   }
 
   @ApiResponse({
-    type: OmitType(User, ['password_hash', 'password_salt']),
+    type: UserGetInfoDto,
   })
   @Get('email/:email')
-  @HttpCode(HttpStatus.OK)
   async findOneByMail(@Param('email') email: string) {
     return this.userService.findOneByMail(email);
   }
 
   @ApiResponse({
-    type: [OmitType(User, ['password_hash', 'password_salt'])],
+    type: [UserGetInfoDto],
   })
   @Get()
-  @HttpCode(HttpStatus.OK)
   async findAll() {
     return this.userService.findAll();
   }
 
   @ApiResponse({
-    type: OmitType(User, ['password_hash', 'password_salt']),
+    type: UserGetInfoDto,
   })
   @Get('phone/:phone')
-  @HttpCode(HttpStatus.OK)
   async findOneByPhone(@Param('phone') phone: string) {
     return this.userService.findOneByPhone(phone);
   }
 
   @ApiResponse({
-    type: [OmitType(User, ['password_hash', 'password_salt'])],
+    type: [UserGetInfoDto],
   })
   @Get('username/:username')
-  @HttpCode(HttpStatus.OK)
   async findOneByUsername(@Param('username') username: string) {
     return this.userService.findOneByUsername(username);
   }
 
+  @ApiResponse({
+    status: 202,
+    description: 'The record has been successfully updated.',
+  })
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @UsePipes(
@@ -96,6 +98,10 @@ export class UserController {
     return await this.userService.update(req.user.id, updateUserDto);
   }
 
+  @ApiResponse({
+    status: 204,
+    description: 'The record has been successfully deleted.',
+  })
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @Delete()
@@ -104,6 +110,10 @@ export class UserController {
     return await this.userService.remove(req.user.id);
   }
 
+  @ApiResponse({
+    status: 202,
+    description: 'The record has been successfully updated.',
+  })
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @Put('reset-password')

@@ -14,4 +14,10 @@ export class Bcrypt {
   async getSalt() {
     return await bcrypt.genSalt(10);
   }
+
+  async hashPassword(password: string) {
+    const password_salt = await this.getSalt();
+    const password_hash = await this.hash(password, password_salt);
+    return { password_hash, password_salt };
+  }
 }

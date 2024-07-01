@@ -4,14 +4,14 @@ import { Repository } from 'typeorm';
 import { User } from '../entity/user.entity';
 import { CreateUserDto } from '../dto/user.create.dto';
 import { UpdateUserDto } from '../dto/user.update.dto';
-import { Bcrypt } from '../../../security/bcrypt/bcrypt';
+import { AuthService } from '../../../security/auth/services/auth.service';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-    private readonly bcrypt: Bcrypt,
+    private readonly authService: AuthService,
   ) {}
 
   async create(createUserDto: CreateUserDto) {
@@ -20,9 +20,8 @@ export class UserService {
       this.checkDataExist('phone_number', createUserDto.phone_number),
     ]);
 
-    const { password_hash, password_salt } = await this.hashPassword(
-      createUserDto.password,
-    );
+    const { password_hash, password_salt } =
+      await this.authService.hashPassword(createUserDto.password);
 
     const user = await this.userRepository.save({
       password_hash,
@@ -30,10 +29,7 @@ export class UserService {
       ...createUserDto,
     });
 
-    delete user.password_hash;
-    delete user.password_salt;
-
-    return user;
+    return await this.findOneById(user.id);
   }
 
   async findAll() {
@@ -81,9 +77,20 @@ export class UserService {
     currentPassword: string,
     newPassword: string,
   ) {
-    await this.confirmPassword(id, currentPassword);
+    const user = await this.validateUser(id);
+    const isValidated = await this.authService.validateUser(
+      user,
+      currentPassword,
+    );
+
+    if (!isValidated)
+      throw new HttpException(
+        'Current password is wrong',
+        HttpStatus.BAD_REQUEST,
+      );
+
     const { password_hash, password_salt } =
-      await this.hashPassword(newPassword);
+      await this.authService.hashPassword(newPassword);
 
     await this.userRepository.update(id, {
       password_hash,
@@ -95,29 +102,16 @@ export class UserService {
     };
   }
 
-  async confirmPassword(id: number, password: string) {
-    const user = await this.userRepository
-      .createQueryBuilder('user')
-      .where('id = :id', { id })
-      .addSelect('user.password_hash')
-      .getOne();
+  private async confirmPassword(id: number, password: string) {
+    const user = await this.validateUser(id);
 
-    const isValidPassword = await this.bcrypt.compare(
-      password,
-      user.password_hash,
-    );
+    const isValidPassword = await this.authService.validateUser(user, password);
 
     if (!isValidPassword)
       throw new HttpException(
         'Current password is wrong',
         HttpStatus.BAD_REQUEST,
       );
-  }
-
-  async hashPassword(password: string) {
-    const password_salt = await this.bcrypt.getSalt();
-    const password_hash = await this.bcrypt.hash(password, password_salt);
-    return { password_hash, password_salt };
   }
 
   async checkDataExist(
@@ -139,11 +133,12 @@ export class UserService {
       );
   }
 
-  async validateUser(email: string, phone?: string) {
+  /* Validade user method return the user hashed password */
+  async validateUser(identifier: any) {
     return await this.userRepository
       .createQueryBuilder('user')
-      .where('email = :email', { email })
-      .orWhere('phone_number = :phone', { phone })
+      .where('email = :email', { email: identifier })
+      .orWhere('id = :id', { id: identifier })
       .addSelect('user.password_hash')
       .getOne();
   }
