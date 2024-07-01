@@ -29,10 +29,7 @@ export class UserService {
       ...createUserDto,
     });
 
-    delete user.password_hash;
-    delete user.password_salt;
-
-    return user;
+    return await this.findOneById(user.id);
   }
 
   async findAll() {
