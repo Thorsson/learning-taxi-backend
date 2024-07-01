@@ -10,10 +10,4 @@ export class AppController {
   Redirect(@Res() response: any): string {
     return response.redirect('/api');
   }
-
-  @ApiExcludeEndpoint()
-  @Get('hello')
-  getHello(): string {
-    return 'Hello World!';
-  }
 }

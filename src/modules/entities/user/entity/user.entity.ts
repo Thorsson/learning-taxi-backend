@@ -30,7 +30,7 @@ export class User {
   @Column({ unique: true, nullable: false })
   phone_number: string;
 
-  @ApiProperty({ nullable: true })
+  @ApiProperty()
   @Column({ nullable: true })
   confirmed_at: Date;
 

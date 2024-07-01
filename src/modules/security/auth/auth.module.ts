@@ -1,15 +1,14 @@
-import { Global, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { Bcrypt } from '../bcrypt/bcrypt';
+import { UserModule } from '../../entities/user/user.module';
 import { AuthService } from './services/auth.service';
 import { PassportModule } from '@nestjs/passport';
-import { AuthController } from './controllers/auth.controller';
-import { UserModule } from '../../entities/user/user.module';
 import { LocalStrategy } from './strategies/local.strategy';
+import { AuthController } from './controllers/auth.controller';
 import { JwtModule } from '@nestjs/jwt';
-import { ConfigService } from '@nestjs/config';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { ConfigService } from '@nestjs/config';
 
-@Global()
 @Module({
   imports: [
     UserModule,
@@ -19,7 +18,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
         return {
           secret: config.get<string>('JWT_SECRET'),
           signOptions: {
-            expiresIn: '20m',
+            expiresIn: '1d',
           },
         };
       },
@@ -28,6 +27,6 @@ import { JwtStrategy } from './strategies/jwt.strategy';
   ],
   controllers: [AuthController],
   providers: [AuthService, Bcrypt, LocalStrategy, JwtStrategy],
-  exports: [AuthService, Bcrypt, JwtModule],
+  exports: [],
 })
 export class AuthModule {}
