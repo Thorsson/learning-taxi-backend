@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { TypeOrmModuleOptions, TypeOrmOptionsFactory } from '@nestjs/typeorm';
-import { Car } from '../../car/entities/car.entity';
-import { Driver } from '../../driver/entities/driver.entity';
+import { Car } from '../../modules/entities/car/entities/car.entity';
+import { Driver } from '../../modules/entities/driver/entities/driver.entity';
 
 @Injectable()
 export class DevConfigService implements TypeOrmOptionsFactory {
