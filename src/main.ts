@@ -16,7 +16,13 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
+  process.env.TZ = '-3:00';
+
   app.useGlobalPipes(new ValidationPipe());
-  await app.listen(4000);
+
+  app.enableCors();
+
+  await app.listen(process.env.PORT || 4000);
 }
+
 bootstrap();

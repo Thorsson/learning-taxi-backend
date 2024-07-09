@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { TypeOrmModuleOptions, TypeOrmOptionsFactory } from '@nestjs/typeorm';
+import { Car } from '../../modules/entities/car/entities/car.entity';
+import { Driver } from '../../modules/entities/driver/entities/driver.entity';
 
 @Injectable()
 export class DevConfigService implements TypeOrmOptionsFactory {
@@ -12,7 +14,6 @@ export class DevConfigService implements TypeOrmOptionsFactory {
       password: process.env.MYSQL_PASSWORD,
       database: process.env.MYSQL_DATABASE,
       synchronize: true,
-      autoLoadEntities: true,
     };
   }
 }
